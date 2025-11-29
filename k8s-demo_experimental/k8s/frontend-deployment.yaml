@@ -5,17 +5,38 @@ metadata:
 spec:
   replicas: 2
   selector:
-    matchLabels: { app: frontend }
+    matchLabels:
+      app: frontend
   template:
     metadata:
-      labels: { app: frontend }
+      labels:
+        app: frontend
     spec:
       containers:
       - name: frontend
         image: frontend:demo
         imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
         env:
         - name: BACKEND_URL
           value: "http://backend:3000"
-        ports:
-        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 8
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"

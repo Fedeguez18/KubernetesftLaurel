@@ -3,9 +3,11 @@ kind: Service
 metadata:
   name: frontend
 spec:
-  selector: { app: frontend }
+  selector:
+    app: frontend
   ports:
   - port: 8080
     targetPort: 8080
     nodePort: 30080
+    protocol: TCP
   type: NodePort

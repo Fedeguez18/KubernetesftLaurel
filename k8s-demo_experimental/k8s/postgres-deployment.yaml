@@ -5,26 +5,60 @@ metadata:
 spec:
   replicas: 1
   selector:
-    matchLabels: { app: postgres }
+    matchLabels:
+      app: postgres
   template:
     metadata:
-      labels: { app: postgres }
+      labels:
+        app: postgres
     spec:
       containers:
       - name: postgres
         image: postgres:15
-        env:
-        - name: POSTGRES_PASSWORD
-          value: postgrespw
-        - name: POSTGRES_USER
-          value: postgres
-        - name: POSTGRES_DB
-          value: demo
         ports:
         - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: pgdata
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - "-U"
+            - "$(POSTGRES_USER)"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - "-U"
+            - "$(POSTGRES_USER)"
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
       volumes:
       - name: pgdata
         persistentVolumeClaim:
